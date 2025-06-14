@@ -1,13 +1,12 @@
 package com.example.pdfscanner.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "pdf_metadata")
@@ -18,12 +17,24 @@ import lombok.NoArgsConstructor;
 public class PdfMetadata {
     @Id
     private String sha256;
+
     @Column(name = "filename")
     private String filename;
+
     private String version;
+
+    @Column(length = 500)
     private String producer;
+
+    @Column()
     private String author;
-    private String created;
-    private String modified;
-    private String scanned;
+
+    @Column(name = "created")
+    private OffsetDateTime created;
+
+    @Column(name = "modified")
+    private OffsetDateTime modified;
+
+    @Column(name = "scanned")
+    private OffsetDateTime scanned;
 }

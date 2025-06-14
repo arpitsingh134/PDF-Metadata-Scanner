@@ -77,9 +77,9 @@ class PdfControllerTest {
                 .version("1.4")
                 .producer("TestProducer")
                 .author("TestAuthor")
-                .created("2024-01-01T10:00:00Z")
-                .modified("2024-01-01T10:00:00Z")
-                .scanned(OffsetDateTime.now(ZoneOffset.UTC).toString())
+                .created(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
+                .modified(OffsetDateTime.parse("2024-01-01T10:00:00Z"))
+                .scanned(OffsetDateTime.parse(OffsetDateTime.now(ZoneOffset.UTC).toString()))
                 .build();
     }
 

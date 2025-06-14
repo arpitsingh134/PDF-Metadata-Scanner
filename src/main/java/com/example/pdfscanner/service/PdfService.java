@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Calendar;
 
 @Slf4j
 @Service
@@ -32,9 +33,9 @@ public class PdfService {
                     .version(String.valueOf(document.getVersion()))
                     .producer(info.getProducer())
                     .author(info.getAuthor())
-                    .created(String.valueOf(info.getCreationDate()))
-                    .modified(String.valueOf(info.getModificationDate()))
-                    .scanned(OffsetDateTime.now(ZoneOffset.UTC).toString())
+                    .created(convertCalendarToOffsetDateTime(info.getCreationDate()))
+                    .modified(convertCalendarToOffsetDateTime(info.getModificationDate()))
+                    .scanned(OffsetDateTime.now(ZoneOffset.UTC))
                     .filename(filename)
                     .build();
 
@@ -44,6 +45,13 @@ public class PdfService {
             log.error("Error extracting metadata for file: {}", filename, e);
             throw e;
         }
+    }
+
+    private OffsetDateTime convertCalendarToOffsetDateTime(Calendar calendar) {
+        if (calendar == null) {
+            return null;
+        }
+        return calendar.toInstant().atOffset(ZoneOffset.UTC);
     }
 
     public PdfMetadata lookup(String hash) {
