@@ -35,21 +35,31 @@ This Spring Boot project allows you to:
 
 ```bash
 git clone https://github.com/arpitsingh134/PDF-Metadata-Scanne.git
+```
+
+```bash
 cd pdf-metadata-scanner
+```
+
+```bash
 mvn clean package
+```
+
+```bash
 mvn clean install
 ```
 
 ### Run with Docker Compose
 
 #### Start Docker Containers
+
 ```bash
 docker-compose up --build
 ```
 
 #### Stop Docker Containers
 ```bash
-docker-compose down -V
+docker-compose down -v
 ```
 
 ---
