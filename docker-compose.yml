@@ -1,33 +1,32 @@
 version: '3.8'
 
 services:
-  mysql-db:
-    image: mysql:8.0
-    container_name: mysql-db
+  db:
+    image: mysql:8
+    container_name: mysqldb
     restart: always
     environment:
       MYSQL_DATABASE: pdfscanner
       MYSQL_USER: testuser
       MYSQL_PASSWORD: testpass
-      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306:3306"
-    volumes:
-      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   app:
     build: .
     container_name: pdfscanner-app
     depends_on:
-      - mysql-db
+      db:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/pdfscanner
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/pdfscanner
       SPRING_DATASOURCE_USERNAME: testuser
       SPRING_DATASOURCE_PASSWORD: testpass
-    volumes:
-      - ./uploads:/uploads
-
-volumes:
-  mysql-data:
