@@ -1,7 +1,0 @@
-com/example/pdfscanner/PdfMetadataScannerApplication.class
-com/example/pdfscanner/model/PdfMetadata$PdfMetadataBuilder.class
-com/example/pdfscanner/service/PdfService.class
-com/example/pdfscanner/model/PdfMetadata.class
-com/example/pdfscanner/repository/PdfMetadataRepository.class
-com/example/pdfscanner/util/HashUtil.class
-com/example/pdfscanner/controller/PdfController.class
