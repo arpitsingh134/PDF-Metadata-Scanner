@@ -1,7 +1,3 @@
-Here’s an updated and complete version of your `README.md` for the **PDF Metadata Scanner API**, now with support for MySQL, Docker Compose, asynchronous processing, and enhanced instructions.
-
----
-
 # 📄 PDF Metadata Scanner API
 
 This Spring Boot project allows you to:
