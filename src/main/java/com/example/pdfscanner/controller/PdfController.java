@@ -43,7 +43,7 @@ public class PdfController {
         return ResponseEntity.ok(Map.of("sha256", sha256));
     }
 
-    @GetMapping("/lookup/{hash}")
+    @GetMapping("/lookup/{fileId}")
     public ResponseEntity<?> lookupMetaData(@PathVariable String fileId) {
         try {
             String decodeHash = URLDecoder.decode(fileId, StandardCharsets.UTF_8.toString());

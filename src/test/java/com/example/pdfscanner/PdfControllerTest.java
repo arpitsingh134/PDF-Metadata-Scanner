@@ -118,7 +118,7 @@ class PdfControllerTest {
     void testLookupMetadataSuccess() throws Exception {
         when(pdfService.lookup(sampleHash)).thenReturn(sampleMetadata);
 
-        mockMvc.perform(get("/lookup/{hash}", sampleHash))
+        mockMvc.perform(get("/lookup/{fileId}", sampleHash))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.sha256").value(sampleHash))
@@ -140,7 +140,7 @@ class PdfControllerTest {
 
         when(pdfService.lookup(nonExistentHash)).thenReturn(null);
 
-        mockMvc.perform(get("/lookup/{hash}", nonExistentHash))
+        mockMvc.perform(get("/lookup/{fileId}", nonExistentHash))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.error").value("Metadata not found"))
