@@ -1,22 +1,22 @@
 package com.example.pdfscanner;
 
+import ch.qos.logback.core.util.FileUtil;
 import com.example.pdfscanner.controller.PdfController;
 import com.example.pdfscanner.model.PdfMetadata;
 import com.example.pdfscanner.service.PdfService;
-import com.example.pdfscanner.util.HashUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -35,19 +35,24 @@ class PdfControllerTest {
     @MockBean
     private PdfService pdfService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @SpyBean
+    private PdfController pdfController;
 
     private MockMultipartFile validPdfFile;
     private MockMultipartFile invalidFile;
-    private MockMultipartFile emptyFile;
     private PdfMetadata sampleMetadata;
     private final String sampleHash = "dGVzdGhhc2g="; // base64 encoded "testhash"
 
     @BeforeEach
-    void setUp() {
-        // Create sample PDF file content (minimal PDF structure)
-        byte[] pdfContent = "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n%%EOF".getBytes();
+    void setUp() throws IOException {
+
+        byte[] pdfContent;
+
+        try (InputStream is = FileUtil.class.getClassLoader().getResourceAsStream("sample1.pdf")) {
+            if (is == null) throw new IOException("File not found");
+            pdfContent = is.readAllBytes();
+        }
+
 
         validPdfFile = new MockMultipartFile(
                 "file",
@@ -63,14 +68,6 @@ class PdfControllerTest {
                 "This is not a PDF file".getBytes()
         );
 
-        emptyFile = new MockMultipartFile(
-                "file",
-                "empty.pdf",
-                "application/pdf",
-                new byte[0]
-        );
-
-        // Create sample metadata
         sampleMetadata = PdfMetadata.builder()
                 .sha256(sampleHash)
                 .filename("sample_123456789.pdf")
@@ -84,34 +81,29 @@ class PdfControllerTest {
     }
 
     @Test
-    void testScanPdf_Success() throws Exception {
-        // Mock HashUtil.sha256 to return a predictable hash
-        try (MockedStatic<HashUtil> hashUtilMock = Mockito.mockStatic(HashUtil.class)) {
-            hashUtilMock.when(() -> HashUtil.sha256(any(byte[].class)))
-                    .thenReturn(sampleHash);
+    void testScanPdfSuccess() throws Exception {
 
-            // Mock service method (void method, so just verify it's called)
-            doNothing().when(pdfService).extractMetadata(any(byte[].class), anyString(), anyString());
+        doReturn(sampleHash).when(pdfController).sha256(any(byte[].class));
 
-            mockMvc.perform(multipart("/scan")
-                            .file(validPdfFile))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                    .andExpect(jsonPath("$.sha256").value(sampleHash))
-                    .andDo(MockMvcResultHandlers.print());
+        doNothing().when(pdfService).extractMetadata(any(byte[].class), anyString(), anyString());
 
-            // Verify service method was called with correct parameters
-            verify(pdfService, times(1)).extractMetadata(
-                    eq(validPdfFile.getBytes()),
-                    eq(sampleHash),
-                    contains("sample_") // filename should contain original name + timestamp
-            );
-        }
+        mockMvc.perform(multipart("/scan")
+                        .file(validPdfFile))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.sha256").value(sampleHash))
+                .andDo(MockMvcResultHandlers.print());
+
+        verify(pdfService, times(1)).extractMetadata(
+                eq(validPdfFile.getBytes()),
+                eq(sampleHash),
+                contains("sample_")
+        );
     }
 
 
     @Test
-    void testScanPdf_InvalidFileType() throws Exception {
+    void testScanPdfInvalidFileType() throws Exception {
         mockMvc.perform(multipart("/scan")
                         .file(invalidFile))
                 .andExpect(status().isBadRequest())
@@ -119,13 +111,11 @@ class PdfControllerTest {
                 .andExpect(jsonPath("$.error").value("Invalid file type"))
                 .andDo(MockMvcResultHandlers.print());
 
-        // Verify service method was never called
         verify(pdfService, never()).extractMetadata(any(), any(), any());
     }
 
     @Test
-    void testLookupMetadata_Success() throws Exception {
-        // Mock service to return sample metadata
+    void testLookupMetadataSuccess() throws Exception {
         when(pdfService.lookup(sampleHash)).thenReturn(sampleMetadata);
 
         mockMvc.perform(get("/lookup/{hash}", sampleHash))
@@ -145,10 +135,9 @@ class PdfControllerTest {
     }
 
     @Test
-    void testLookupMetadata_NotFound() throws Exception {
+    void testLookupMetadataNotFound() throws Exception {
         String nonExistentHash = "nonexistenthash";
 
-        // Mock service to return null (not found)
         when(pdfService.lookup(nonExistentHash)).thenReturn(null);
 
         mockMvc.perform(get("/lookup/{hash}", nonExistentHash))
